@@ -35,20 +35,11 @@ struct Arc: Shape {
 struct ContentView: View {
     var body: some View {
         VStack {
-            Spacer()
+            Circle()
+                .stroke(.blue, lineWidth: 40)
             
-            Triangle()
-            //            .fill(.blue)
-                .stroke(.red, style: StrokeStyle(lineWidth: 10, lineCap: .round, lineJoin: .round))
-                .frame(width: 200, height: 200)
-            
-            Spacer()
-            
-            Arc(startAngle: .degrees(0), endAngle: .degrees(110), clockwise: true)
-                .stroke(.blue, lineWidth: 10)
-                .frame(width: 300, height: 300)
-            
-            Spacer()
+            Circle()
+                .strokeBorder(.blue, lineWidth: 40)
         }
     }
 }
