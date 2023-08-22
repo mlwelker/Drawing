@@ -1,92 +1,64 @@
 
 import SwiftUI
 
-struct Spirograph: Shape {
-    let innerRadius: Int
-    let outerRadius: Int
-    let distance: Int
-    let amount: Double
+struct Arrow: Shape {
+    var width: Double
+    var inset: Double
     
-    func gcd(_ a: Int, _ b: Int) -> Int {
-        var a = a
-        var b = b
-        
-        while b != 0 {
-            let temp = b
-            b = a % b
-            a = temp
-        }
-        
-        return a
+    var animatableData: Double {
+        get { width }
+        set { width = newValue }
     }
     
     func path(in rect: CGRect) -> Path {
-        let divisor = gcd(innerRadius, outerRadius)
-        
-        let outerRadius = Double(self.outerRadius)
-        let innerRadius = Double(self.innerRadius)
-        let distance = Double(self.distance)
-        
-        let difference = innerRadius - outerRadius
-        let endPoint = ceil(2 * Double.pi * outerRadius / Double(divisor)) * amount
-        
         var path = Path()
         
-        for theta in stride(from: 0, through: endPoint, by: 0.01) {
-            var x = difference * cos(theta) + distance * cos(difference / outerRadius * theta)
-            var y = difference * sin(theta) - distance * sin(difference / outerRadius * theta)
-            
-            x += rect.width / 2
-            y += rect.height / 2
-            
-            if theta == 0 {
-                path.move(to: CGPoint(x: x, y: y))
-            } else {
-                path.addLine(to: CGPoint(x: x, y: y))
-            }
-        }
+        path.move(to: CGPoint(x: rect.midX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.minX - width, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY - inset))
+        path.addLine(to: CGPoint(x: rect.maxX + width, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.midX, y: rect.minY))
         
         return path
     }
 }
 
 struct ContentView: View {
-    @State private var innerRadius = 125.0
-    @State private var outerRadius = 75.0
-    @State private var distance = 25.0
-    @State private var amount = 1.0
-    @State private var hue = 0.6
+    @State private var insetAmount = 40.0
+    @State private var arrowWidth = 40.0
+    
+    let arrowWidths = [10.0, 40.0, 80.0, 100.0]
     
     var body: some View {
-        VStack(spacing: 0) {
+        VStack {
             Spacer()
             
-            Spirograph(innerRadius: Int(innerRadius), outerRadius: Int(outerRadius), distance: Int(distance), amount: amount)
-                .stroke(Color(hue: hue, saturation: 1, brightness: 1), lineWidth: 1)
-                .frame(width: 300, height: 300)
+            Arrow(width: arrowWidth, inset: insetAmount)
+                .fill(.blue)
+                .frame(width: 100, height: 300)
+                .onTapGesture {
+                    withAnimation {
+                        arrowWidth = Double.random(in: 10.0...100.0)
+                    }
+                }
             
-            Spacer()
-            
-            Group {
-                Text("Inner radius: \(Int(innerRadius))")
-                Slider(value: $innerRadius, in: 10...150, step: 1)
-                    .padding([.horizontal, .bottom])
+            Form {
+                Section {
+                    Picker("Arrow width", selection: $arrowWidth) {
+                        ForEach(arrowWidths, id: \.self) { width in
+                            Text("\(width, format: .number)")
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                } header: {
+                    Text("Arrow Width")
+                }
                 
-                Text("Outer radius: \(Int(outerRadius))")
-                Slider(value: $outerRadius, in: 10...150, step: 1)
-                    .padding([.horizontal, .bottom])
-                
-                Text("Distance: \(Int(distance))")
-                Slider(value: $distance, in: 1...150, step: 1)
-                    .padding([.horizontal, .bottom])
-                
-                Text("Amount: \(amount, format: .number.precision(.fractionLength(2)))")
-                Slider(value: $amount)
-                    .padding([.horizontal, .bottom])
-                
-                Text("Color")
-                Slider(value: $hue)
-                    .padding(.horizontal)
+                Section {
+                    Slider(value: $insetAmount, in: 0...100)
+                } header: {
+                    Text("Inset")
+                }
             }
         }
     }
